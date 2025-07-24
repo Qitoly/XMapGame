@@ -99,8 +99,7 @@ export function GameProvider({ children }) {
     // Обработчики игровых событий
     socket.on('player_joined', (data) => {
       console.log('Player joined:', data);
-      // Обновляем список игроков при подключении нового игрока
-      // Здесь можно добавить логику обновления или перезагрузки данных игры
+      // Здесь можно обновить список игроков
     });
 
     socket.on('player_disconnected', (data) => {
@@ -124,11 +123,18 @@ export function GameProvider({ children }) {
         type: GAME_ACTIONS.UPDATE_PLAYER, 
         payload: { id: data.player_id, is_ready: data.is_ready }
       });
+      
+      // Также обновляем текущего игрока если это он
+      if (state.currentPlayer && state.currentPlayer.id === data.player_id) {
+        dispatch({ 
+          type: GAME_ACTIONS.SET_CURRENT_PLAYER, 
+          payload: { ...state.currentPlayer, is_ready: data.is_ready }
+        });
+      }
     });
 
     socket.on('all_players_ready', (data) => {
       console.log('All players ready:', data.message);
-      // Можно показать уведомление
     });
 
     socket.on('game_started', (data) => {
@@ -149,7 +155,7 @@ export function GameProvider({ children }) {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, []); // Убираем state из зависимостей
 
   // Методы для работы с игрой
   const gameActions = {
