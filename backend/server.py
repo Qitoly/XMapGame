@@ -669,9 +669,7 @@ async def start_game(sid, data):
 # Include the router in the main app
 app.include_router(api_router)
 
-# Mount Socket.IO
-app.mount("/socket.io", socketio.ASGIApp(sio))
-
+# Configure CORS before mounting Socket.IO
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -679,6 +677,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Create Socket.IO ASGI app that wraps the FastAPI app
+socket_app = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path="socket.io")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
