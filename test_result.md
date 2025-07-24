@@ -267,7 +267,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Socket.IO Real-time Communication"
     - "Frontend Components Testing"
   stuck_tasks: []
   test_all: false
