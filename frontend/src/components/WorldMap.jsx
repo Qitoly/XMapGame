@@ -1,12 +1,21 @@
 import React, { useState, useCallback } from 'react';
+import { 
+  ComposableMap, 
+  Geographies, 
+  Geography 
+} from 'react-simple-maps';
 import CountryTooltip from './CountryTooltip';
 import { getCountryData } from '../mock';
+
+// URL для карты мира (TopoJSON формат)
+const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
 const WorldMap = () => {
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
-  const handleCountryHover = useCallback((event, countryCode) => {
+  const handleCountryHover = useCallback((event, geo) => {
+    const countryCode = geo.properties.ISO_A2;
     const countryData = getCountryData(countryCode);
     setHoveredCountry(countryData.name);
     setTooltipPosition({ x: event.clientX, y: event.clientY });
@@ -23,195 +32,93 @@ const WorldMap = () => {
   }, [hoveredCountry]);
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-6xl">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Интерактивная карта мира</h1>
-          <p className="text-gray-600">Наведите курсор на любую страну</p>
+    <div className="w-full h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4 overflow-hidden">
+      <div className="relative w-full max-w-7xl">
+        <div className="text-center mb-8 animate-fade-in">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent mb-4">
+            Интерактивная карта мира
+          </h1>
+          <p className="text-xl text-gray-600 font-medium">
+            Наведите курсор на любую страну для получения информации
+          </p>
+          <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-4 rounded-full"></div>
         </div>
         
-        <div className="bg-white rounded-2xl shadow-2xl p-8 overflow-hidden">
-          <svg
-            viewBox="0 0 1000 500"
-            className="w-full h-auto cursor-pointer"
-            onMouseMove={handleMouseMove}
+        <div 
+          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20 map-container"
+          onMouseMove={handleMouseMove}
+        >
+          <ComposableMap
+            projectionConfig={{
+              scale: 150,
+              center: [0, 20]
+            }}
+            style={{
+              width: "100%",
+              height: "500px"
+            }}
           >
-            {/* Определения для градиентов и эффектов */}
+            <Geographies geography={geoUrl}>
+              {({ geographies }) =>
+                geographies.map((geo) => (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    onMouseEnter={(event) => handleCountryHover(event, geo)}
+                    onMouseLeave={handleCountryLeave}
+                    style={{
+                      default: {
+                        fill: "#e2e8f0",
+                        stroke: "#cbd5e1",
+                        strokeWidth: 0.5,
+                        outline: "none",
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                      },
+                      hover: {
+                        fill: "url(#hoverGradient)",
+                        stroke: "#ef4444",
+                        strokeWidth: 2,
+                        outline: "none",
+                        transform: "scale(1.02)",
+                        filter: "drop-shadow(0 10px 20px rgba(239, 68, 68, 0.3))",
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+                      },
+                      pressed: {
+                        fill: "#dc2626",
+                        stroke: "#b91c1c",
+                        strokeWidth: 2,
+                        outline: "none"
+                      }
+                    }}
+                    className="country-geography cursor-pointer"
+                  />
+                ))
+              }
+            </Geographies>
+            
+            {/* Определения градиентов */}
             <defs>
+              <linearGradient id="hoverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9"/>
+                <stop offset="30%" stopColor="#f97316" stopOpacity="0.8"/>
+                <stop offset="70%" stopColor="#eab308" stopOpacity="0.9"/>
+                <stop offset="100%" stopColor="#22c55e" stopOpacity="0.8"/>
+              </linearGradient>
+              
               <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
                 <feMerge> 
                   <feMergeNode in="coloredBlur"/>
                   <feMergeNode in="SourceGraphic"/>
                 </feMerge>
               </filter>
-              <linearGradient id="countryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#3b82f6"/>
-                <stop offset="100%" stopColor="#1d4ed8"/>
-              </linearGradient>
-              <linearGradient id="hoverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#ef4444"/>
-                <stop offset="50%" stopColor="#f97316"/>
-                <stop offset="100%" stopColor="#eab308"/>
-              </linearGradient>
             </defs>
-
-            {/* Северная Америка */}
-            <path
-              d="M150 100 L200 80 L280 90 L300 120 L280 150 L200 140 L150 130 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'US')}
-              onMouseLeave={handleCountryLeave}
-            />
-            
-            <path
-              d="M150 70 L250 50 L280 90 L200 80 L150 100 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'CA')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M150 130 L200 140 L280 150 L260 180 L180 170 L150 160 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'MX')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            {/* Южная Америка */}
-            <path
-              d="M200 220 L250 210 L280 240 L270 300 L230 320 L200 280 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'BR')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M180 280 L230 320 L210 380 L160 360 L170 320 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'AR')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M160 320 L210 300 L230 320 L200 350 L170 340 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'CL')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            {/* Европа */}
-            <path
-              d="M420 90 L450 85 L460 110 L440 120 L420 115 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'GB')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M460 110 L490 105 L500 130 L480 135 L460 125 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'FR')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M500 100 L530 95 L540 120 L520 125 L500 115 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'DE')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M480 135 L520 130 L530 160 L500 165 L480 150 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'IT')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M440 140 L480 135 L490 165 L450 170 L440 155 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'ES')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            {/* Россия */}
-            <path
-              d="M540 60 L750 50 L760 120 L550 130 L540 80 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'RU')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            {/* Азия */}
-            <path
-              d="M650 150 L750 140 L760 220 L650 230 L640 180 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'CN')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M600 180 L650 170 L660 240 L610 250 L600 210 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'IN')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M750 140 L800 135 L810 180 L760 185 L750 160 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'JP')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            {/* Африка */}
-            <path
-              d="M480 200 L580 190 L590 300 L480 310 L470 250 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'NG')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M500 320 L580 310 L590 380 L500 390 L490 350 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'ZA')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M520 180 L580 170 L590 200 L530 210 L520 190 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'EG')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            {/* Австралия */}
-            <path
-              d="M750 350 L850 340 L860 390 L750 400 L740 370 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'AU')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            {/* Другие страны */}
-            <path
-              d="M600 240 L650 230 L660 270 L610 280 L600 255 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'TH')}
-              onMouseLeave={handleCountryLeave}
-            />
-
-            <path
-              d="M660 270 L720 260 L730 320 L660 330 L650 295 Z"
-              className="country-path transition-all duration-300 ease-out cursor-pointer hover:filter hover:drop-shadow-lg"
-              onMouseEnter={(e) => handleCountryHover(e, 'ID')}
-              onMouseLeave={handleCountryLeave}
-            />
-          </svg>
+          </ComposableMap>
         </div>
+        
+        {/* Декоративные элементы */}
+        <div className="absolute -top-20 -left-20 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
       
       <CountryTooltip
