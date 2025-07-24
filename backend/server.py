@@ -681,6 +681,9 @@ app.add_middleware(
 # Create Socket.IO ASGI app that wraps the FastAPI app
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path="socket.io")
 
+# Export socket_app as the main application for uvicorn
+application = socket_app
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
