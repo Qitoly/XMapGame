@@ -667,6 +667,9 @@ async def start_game(sid, data):
         logger.error(f"Error starting game: {e}")
         await sio.emit("error", {"message": "Ошибка начала игры"}, room=sid)
 
+# Mount Socket.IO server under the /api/socket.io path
+socket_asgi_app = socketio.ASGIApp(sio, socketio_path="/api/socket.io")
+
 # Include the router in the main app
 app.include_router(api_router)
 
@@ -679,16 +682,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create Socket.IO ASGI app that wraps the FastAPI app
-# Mount Socket.IO under the /api prefix so ingress routes requests correctly
-socket_app = socketio.ASGIApp(
-    sio,
-    other_asgi_app=app,
-    socketio_path="/api/socket.io"
-)
+# Mount the Socket.IO app
+app.mount("/api/socket.io", socket_asgi_app)
 
-# Export socket_app as the main application for uvicorn
-application = socket_app
+# Export the main app for uvicorn
+application = app
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
