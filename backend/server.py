@@ -340,8 +340,337 @@ async def kick_player(game_id: str, request: KickPlayerRequest, host_player_id: 
         logger.error(f"Error kicking player: {e}")
         raise HTTPException(status_code=500, detail="Ошибка исключения игрока")
 
+# =============================================================================
+# SOCKET.IO EVENTS
+# =============================================================================
+
+@sio.event
+async def connect(sid, environ):
+    """Обработка подключения клиента"""
+    logger.info(f"Client {sid} connected")
+
+@sio.event
+async def disconnect(sid):
+    """Обработка отключения клиента"""
+    logger.info(f"Client {sid} disconnected")
+    
+    # Ищем игрока по socket_id и помечаем как отключенного
+    player = await db.players.find_one({"socket_id": sid})
+    if player:
+        await db.players.update_one(
+            {"id": player["id"]},
+            {"$set": {"status": PlayerStatus.DISCONNECTED, "socket_id": None}}
+        )
+        
+        # Отключаем от менеджера соединений
+        await connection_manager.disconnect_player(player["id"], player["game_id"])
+        
+        # Уведомляем других игроков в комнате
+        await sio.emit("player_disconnected", {
+            "player_id": player["id"],
+            "player_name": player["name"]
+        }, room=f"game_{player['game_id']}")
+
+@sio.event
+async def join_game_room(sid, data):
+    """Присоединиться к комнате игры"""
+    try:
+        game_id = data.get("game_id")
+        player_id = data.get("player_id")
+        
+        if not game_id or not player_id:
+            await sio.emit("error", {"message": "Missing game_id or player_id"}, room=sid)
+            return
+        
+        # Проверяем существование игрока
+        player = await db.players.find_one({
+            "id": player_id,
+            "game_id": game_id
+        })
+        
+        if not player:
+            await sio.emit("error", {"message": "Player not found"}, room=sid)
+            return
+        
+        # Обновляем socket_id игрока
+        await db.players.update_one(
+            {"id": player_id},
+            {
+                "$set": {
+                    "socket_id": sid,
+                    "status": PlayerStatus.ACTIVE,
+                    "last_activity": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Присоединяем к комнате
+        await sio.enter_room(sid, f"game_{game_id}")
+        
+        # Добавляем в менеджер соединений
+        await connection_manager.connect_player(player_id, sid, game_id)
+        
+        # Уведомляем других игроков
+        await sio.emit("player_joined", {
+            "player_id": player_id,
+            "player_name": player["name"],
+            "status": PlayerStatus.ACTIVE
+        }, room=f"game_{game_id}", skip_sid=sid)
+        
+        logger.info(f"Player {player['name']} joined room game_{game_id}")
+        
+    except Exception as e:
+        logger.error(f"Error joining game room: {e}")
+        await sio.emit("error", {"message": "Ошибка присоединения к комнате"}, room=sid)
+
+@sio.event
+async def send_message(sid, data):
+    """Отправить сообщение в чат"""
+    try:
+        game_id = data.get("game_id")
+        player_id = data.get("player_id")
+        message = data.get("message", "").strip()
+        target_player_id = data.get("target_player_id")  # Для приватных сообщений
+        
+        if not all([game_id, player_id, message]):
+            await sio.emit("error", {"message": "Missing required fields"}, room=sid)
+            return
+        
+        # Проверяем игрока
+        player = await db.players.find_one({
+            "id": player_id,
+            "game_id": game_id,
+            "socket_id": sid
+        })
+        
+        if not player:
+            await sio.emit("error", {"message": "Unauthorized"}, room=sid)
+            return
+        
+        # Создаем сообщение
+        chat_message = ChatMessage(
+            game_id=game_id,
+            player_id=player_id,
+            player_name=player["name"],
+            message=message,
+            message_type="private" if target_player_id else "public",
+            target_player_id=target_player_id
+        )
+        
+        # Сохраняем в базу
+        await db.chat_messages.insert_one(chat_message.dict())
+        
+        # Отправляем сообщение
+        message_data = {
+            "id": chat_message.id,
+            "player_id": player_id,
+            "player_name": player["name"],
+            "message": message,
+            "message_type": chat_message.message_type,
+            "target_player_id": target_player_id,
+            "created_at": chat_message.created_at.isoformat()
+        }
+        
+        if target_player_id:
+            # Приватное сообщение
+            target_player = await db.players.find_one({"id": target_player_id})
+            if target_player and target_player.get("socket_id"):
+                await sio.emit("new_message", message_data, room=target_player["socket_id"])
+                await sio.emit("new_message", message_data, room=sid)
+        else:
+            # Публичное сообщение
+            await sio.emit("new_message", message_data, room=f"game_{game_id}")
+        
+    except Exception as e:
+        logger.error(f"Error sending message: {e}")
+        await sio.emit("error", {"message": "Ошибка отправки сообщения"}, room=sid)
+
+@sio.event
+async def update_ping(sid, data):
+    """Обновить пинг игрока"""
+    try:
+        player_id = data.get("player_id")
+        ping = data.get("ping", 0)
+        
+        if not player_id:
+            return
+        
+        # Обновляем пинг в базе
+        await db.players.update_one(
+            {"id": player_id, "socket_id": sid},
+            {"$set": {"ping": ping, "last_activity": datetime.utcnow()}}
+        )
+        
+        # Получаем игру игрока
+        player = await db.players.find_one({"id": player_id})
+        if player:
+            # Уведомляем других игроков об обновлении пинга
+            await sio.emit("ping_updated", {
+                "player_id": player_id,
+                "ping": ping
+            }, room=f"game_{player['game_id']}", skip_sid=sid)
+        
+    except Exception as e:
+        logger.error(f"Error updating ping: {e}")
+
+@sio.event
+async def player_ready(sid, data):
+    """Игрок готов к началу игры"""
+    try:
+        player_id = data.get("player_id")
+        is_ready = data.get("is_ready", True)
+        
+        if not player_id:
+            await sio.emit("error", {"message": "Missing player_id"}, room=sid)
+            return
+        
+        # Обновляем статус готовности
+        result = await db.players.update_one(
+            {"id": player_id, "socket_id": sid},
+            {"$set": {"is_ready": is_ready}}
+        )
+        
+        if result.modified_count == 0:
+            await sio.emit("error", {"message": "Player not found"}, room=sid)
+            return
+        
+        # Получаем игрока и игру
+        player = await db.players.find_one({"id": player_id})
+        if not player:
+            return
+        
+        game_id = player["game_id"]
+        
+        # Уведомляем других игроков
+        await sio.emit("player_ready_changed", {
+            "player_id": player_id,
+            "is_ready": is_ready
+        }, room=f"game_{game_id}")
+        
+        # Если все игроки готовы, можно начинать игру
+        total_players = await db.players.count_documents({
+            "game_id": game_id,
+            "status": PlayerStatus.ACTIVE
+        })
+        
+        ready_players = await db.players.count_documents({
+            "game_id": game_id,
+            "status": PlayerStatus.ACTIVE,
+            "is_ready": True
+        })
+        
+        if total_players >= 4 and ready_players == total_players:
+            # Все готовы к началу игры
+            await sio.emit("all_players_ready", {
+                "message": "Все игроки готовы! Игра может начаться."
+            }, room=f"game_{game_id}")
+        
+    except Exception as e:
+        logger.error(f"Error updating player ready status: {e}")
+        await sio.emit("error", {"message": "Ошибка обновления статуса"}, room=sid)
+
+@sio.event
+async def start_game(sid, data):
+    """Начать игру (только хост)"""
+    try:
+        game_id = data.get("game_id")
+        player_id = data.get("player_id")
+        
+        if not all([game_id, player_id]):
+            await sio.emit("error", {"message": "Missing required fields"}, room=sid)
+            return
+        
+        # Проверяем, что это хост
+        host = await db.players.find_one({
+            "id": player_id,
+            "game_id": game_id,
+            "is_host": True,
+            "socket_id": sid
+        })
+        
+        if not host:
+            await sio.emit("error", {"message": "Only host can start the game"}, room=sid)
+            return
+        
+        # Проверяем минимальное количество игроков
+        active_players = await db.players.count_documents({
+            "game_id": game_id,
+            "status": PlayerStatus.ACTIVE
+        })
+        
+        if active_players < 4:
+            await sio.emit("error", {"message": "Минимум 4 игрока для начала игры"}, room=sid)
+            return
+        
+        # Назначаем страны игрокам
+        players = await db.players.find({
+            "game_id": game_id,
+            "status": PlayerStatus.ACTIVE
+        }).to_list(100)
+        
+        # Перемешиваем список стран
+        available_countries = COUNTRIES.copy()
+        random.shuffle(available_countries)
+        
+        # Назначаем страны
+        for i, player in enumerate(players):
+            if i < len(available_countries):
+                country = available_countries[i]
+                await db.players.update_one(
+                    {"id": player["id"]},
+                    {
+                        "$set": {
+                            "country": country["name"],
+                            "country_flag": country["flag"],
+                            "is_ready": False  # Сбрасываем готовность для фазы настройки
+                        }
+                    }
+                )
+        
+        # Обновляем статус игры
+        await db.games.update_one(
+            {"id": game_id},
+            {
+                "$set": {
+                    "current_phase": GamePhase.SETUP,
+                    "is_started": True,
+                    "started_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Получаем обновленных игроков
+        updated_players = await db.players.find({
+            "game_id": game_id,
+            "status": PlayerStatus.ACTIVE
+        }).to_list(100)
+        
+        # Уведомляем всех о начале игры
+        await sio.emit("game_started", {
+            "phase": GamePhase.SETUP,
+            "message": "Игра началась! Распределите очки между атакой и защитой.",
+            "players": [
+                {
+                    "id": p["id"],
+                    "name": p["name"],
+                    "country": p.get("country"),
+                    "country_flag": p.get("country_flag")
+                }
+                for p in updated_players
+            ]
+        }, room=f"game_{game_id}")
+        
+        logger.info(f"Game {game_id} started with {len(players)} players")
+        
+    except Exception as e:
+        logger.error(f"Error starting game: {e}")
+        await sio.emit("error", {"message": "Ошибка начала игры"}, room=sid)
+
 # Include the router in the main app
 app.include_router(api_router)
+
+# Mount Socket.IO
+app.mount("/socket.io", socketio.ASGIApp(sio))
 
 app.add_middleware(
     CORSMiddleware,
@@ -351,13 +680,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+    await redis_service.close()
