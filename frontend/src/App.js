@@ -32,7 +32,7 @@ function AppContent() {
       setPlayers(response.players);
       
     } catch (err) {
-      setError(err.message);
+      setError(err.message || err.toString() || 'Ошибка создания игры');
       throw err;
     } finally {
       setLoading(false);
