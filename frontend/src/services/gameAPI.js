@@ -38,7 +38,21 @@ export const gameAPI = {
       const response = await api.post('/games', gameData);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.detail || 'Ошибка создания игры');
+      let errorMessage = 'Ошибка создания игры';
+      
+      if (error.response?.data?.detail) {
+        const detail = error.response.data.detail;
+        if (Array.isArray(detail)) {
+          // If detail is an array, extract the message from the first item
+          errorMessage = detail[0]?.msg || detail[0]?.message || detail[0] || errorMessage;
+        } else if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (typeof detail === 'object' && detail.message) {
+          errorMessage = detail.message;
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
   },
 
