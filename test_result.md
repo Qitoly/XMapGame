@@ -269,6 +269,6 @@ test_plan:
 
 agent_communication:
   - agent: "main"
-    message: "Implemented complete lobby system for Empires game with backend APIs, Socket.IO real-time communication, Redis integration, and modern React frontend. Key features: create/join games, real-time chat, player management, ping monitoring, country assignment, host controls. Ready for comprehensive testing of all lobby functionality."
+    message: "MAJOR BREAKTHROUGH: Fixed the critical Socket.IO routing issue that was preventing real-time communication. Socket.IO server now properly mounted using app.mount() approach instead of socketio.ASGIApp wrapper. Server responds correctly at /api/socket.io endpoint. Redis installed and running. All backend infrastructure is now working. Ready for comprehensive testing of the complete lobby system including real-time features."
   - agent: "testing"
     message: "Backend testing completed. API endpoints working perfectly (100% success rate) - all game management, player joining, password protection, and validation working correctly. Critical issue: Socket.IO has routing problem where /socket.io endpoint returns frontend HTML instead of backend Socket.IO server. This is infrastructure/deployment issue, not code issue. Backend Socket.IO implementation appears correct but unreachable via external URL."
