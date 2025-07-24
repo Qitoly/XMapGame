@@ -28,9 +28,10 @@ class SocketIOTester:
         
         self.api_url = f"{self.base_url}/api"
         self.socket_url = self.base_url
-        
+        self.socket_path = "api/socket.io"
+
         print(f"Testing Socket.IO at: {self.socket_url}")
-        print(f"Socket.IO endpoint: {self.socket_url}/socket.io/")
+        print(f"Socket.IO endpoint: {self.socket_url}/{self.socket_path}/")
         
         # Test data storage
         self.test_results = []
@@ -65,7 +66,7 @@ class SocketIOTester:
         try:
             async with aiohttp.ClientSession() as session:
                 # Test the Socket.IO handshake endpoint
-                handshake_url = f"{self.socket_url}/socket.io/?EIO=4&transport=polling"
+                handshake_url = f"{self.socket_url}/{self.socket_path}/?EIO=4&transport=polling"
                 
                 async with session.get(handshake_url) as response:
                     content = await response.text()
@@ -114,7 +115,10 @@ class SocketIOTester:
             start_time = time.time()
             print(f"    Attempting connection to: {self.socket_url}")
             
-            await asyncio.wait_for(client.connect(self.socket_url), timeout=10.0)
+            await asyncio.wait_for(
+                client.connect(self.socket_url, socketio_path=self.socket_path),
+                timeout=10.0,
+            )
             
             # Wait a bit for connection to establish
             await asyncio.sleep(2)

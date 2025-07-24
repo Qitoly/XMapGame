@@ -28,7 +28,11 @@ async def test_socket_connection():
         url = "https://76f48bb5-574d-4855-95cf-3fbfd8d74a74.preview.emergentagent.com"
         print(f"Attempting to connect to: {url}")
         
-        await client.connect(url, transports=['websocket', 'polling'])
+        await client.connect(
+            url,
+            transports=['websocket', 'polling'],
+            socketio_path='api/socket.io',
+        )
         await asyncio.sleep(3)  # Wait for connection
         
     except Exception as e:

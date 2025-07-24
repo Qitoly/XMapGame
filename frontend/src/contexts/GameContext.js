@@ -78,7 +78,8 @@ export function GameProvider({ children }) {
     const backendUrl = process.env.REACT_APP_BACKEND_URL;
     const socket = io(backendUrl, {
       transports: ['websocket', 'polling'],
-      forceNew: true
+      forceNew: true,
+      path: '/api/socket.io',
     });
 
     socket.on('connect', () => {
