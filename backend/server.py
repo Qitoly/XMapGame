@@ -679,12 +679,7 @@ app.add_middleware(
 )
 
 # Create Socket.IO ASGI app that wraps the FastAPI app
-# Mount Socket.IO under the /api prefix so ingress routes requests correctly
-socket_app = socketio.ASGIApp(
-    sio,
-    other_asgi_app=app,
-    socketio_path="/api/socket.io/",
-)
+socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
 
 # Export socket_app as the main application for uvicorn
 application = socket_app
