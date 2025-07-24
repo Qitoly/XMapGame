@@ -285,7 +285,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Frontend Components Testing"
+    - "All Frontend Components Successfully Tested"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
