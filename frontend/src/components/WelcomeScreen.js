@@ -39,7 +39,7 @@ function WelcomeScreen({ onCreateGame, onJoinGame }) {
         max_players: gameData.max_players
       });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || err.toString() || 'Ошибка создания игры');
     } finally {
       setLoading(false);
     }
