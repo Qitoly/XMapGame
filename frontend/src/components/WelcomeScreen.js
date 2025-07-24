@@ -61,7 +61,7 @@ function WelcomeScreen({ onCreateGame, onJoinGame }) {
         password: joinData.password || null
       });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || err.toString() || 'Ошибка присоединения к игре');
     } finally {
       setLoading(false);
     }
