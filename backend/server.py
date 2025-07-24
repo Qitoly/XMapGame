@@ -24,6 +24,7 @@ db = client[os.environ['DB_NAME']]
 
 # Socket.IO setup
 sio = socketio.AsyncServer(
+    async_mode='asgi',
     cors_allowed_origins="*",
     logger=True,
     engineio_logger=True
