@@ -683,7 +683,7 @@ app.add_middleware(
 socket_app = socketio.ASGIApp(
     sio,
     other_asgi_app=app,
-    socketio_path="api/socket.io",
+    socketio_path="/api/socket.io/",
 )
 
 # Export socket_app as the main application for uvicorn
