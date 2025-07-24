@@ -149,11 +149,11 @@ backend:
 
   - task: "Socket.IO Real-time Communication"
     implemented: true
-    working: false
+    working: true
     file: "server.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -161,6 +161,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Socket.IO connection failing due to infrastructure/routing issue. The /socket.io endpoint returns frontend HTML instead of Socket.IO server response, indicating Kubernetes ingress is routing Socket.IO requests to frontend instead of backend. Backend Socket.IO code appears correct but unreachable via external URL. This is a deployment configuration issue, not a code issue."
+      - working: true
+        agent: "main"
+        comment: "FIXED: Socket.IO routing issue resolved. Changed from socketio.ASGIApp(sio, other_asgi_app=app, socketio_path) configuration to app.mount() approach. Socket.IO server now properly mounted at /api/socket.io and responding with correct handshake. Redis server installed and running. Ready for comprehensive testing."
 
   - task: "Country Assignment System"
     implemented: true
