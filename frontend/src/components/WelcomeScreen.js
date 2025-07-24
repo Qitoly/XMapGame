@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Users, GameController2, Globe } from 'lucide-react';
+import { Users, Gamepad2, Globe } from 'lucide-react';
 
 function WelcomeScreen({ onCreateGame, onJoinGame }) {
   const [playerName, setPlayerName] = useState('');
@@ -126,7 +126,7 @@ function WelcomeScreen({ onCreateGame, onJoinGame }) {
                   disabled={!playerName.trim() || loading}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
                 >
-                  <GameController2 className="w-4 h-4 mr-2" />
+                  <Gamepad2 className="w-4 h-4 mr-2" />
                   Создать игру
                 </Button>
                 
@@ -161,7 +161,7 @@ function WelcomeScreen({ onCreateGame, onJoinGame }) {
           <Card className="bg-white/80 backdrop-blur-sm border-white/20 shadow-xl">
             <CardHeader>
               <CardTitle className="text-center text-gray-800 flex items-center justify-center">
-                <GameController2 className="w-5 h-5 mr-2" />
+                <Gamepad2 className="w-5 h-5 mr-2" />
                 Создать новую игру
               </CardTitle>
             </CardHeader>
