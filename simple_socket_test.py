@@ -25,7 +25,7 @@ async def test_socket_connection():
             print("🔌 Socket.IO disconnected")
         
         # Try to connect
-        url = "https://76f48bb5-574d-4855-95cf-3fbfd8d74a74.preview.emergentagent.com"
+        url = "https://41658789-5cf2-4ad8-a046-fe05d9b0c865.preview.emergentagent.com"
         print(f"Attempting to connect to: {url}")
         
         await client.connect(
