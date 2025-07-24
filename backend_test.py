@@ -31,6 +31,7 @@ class EmpireGameTester:
         
         self.api_url = f"{self.base_url}/api"
         self.socket_url = self.base_url
+        self.socket_path = "api/socket.io"
         
         print(f"Testing backend at: {self.api_url}")
         print(f"Testing Socket.IO at: {self.socket_url}")
@@ -290,7 +291,10 @@ class EmpireGameTester:
                 connection_error = data
             
             # Attempt connection
-            await client.connect(self.socket_url)
+            await client.connect(
+                self.socket_url,
+                socketio_path=self.socket_path,
+            )
             
             # Wait a bit for connection
             await asyncio.sleep(1)
