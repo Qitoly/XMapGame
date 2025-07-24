@@ -79,7 +79,7 @@ export function GameProvider({ children }) {
     const socket = io(backendUrl, {
       transports: ['websocket', 'polling'],
       forceNew: true,
-      path: '/api/socket.io',
+      path: '/api/socket.io/',
     });
 
     socket.on('connect', () => {
