@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import "./App.css";
-import { GameProvider } from "./contexts/GameContext";
+import { GameProvider, useGame } from "./contexts/GameContext";
 import WelcomeScreen from "./components/WelcomeScreen";
 import GameLobby from "./components/GameLobby";
 import { gameAPI } from "./services/gameAPI";
 
-function App() {
+// Внутренний компонент приложения, который имеет доступ к GameContext
+function AppContent() {
   const [gameData, setGameData] = useState(null);
   const [currentPlayer, setCurrentPlayer] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const { setGameData: setContextGameData, setCurrentPlayer: setContextCurrentPlayer, setPlayers } = useGame();
 
   const handleCreateGame = async (createData) => {
     try {
@@ -22,6 +25,11 @@ function App() {
       // Устанавливаем текущего игрока как хоста
       const hostPlayer = response.players.find(p => p.is_host);
       setCurrentPlayer(hostPlayer);
+      
+      // Передаем данные в контекст
+      setContextGameData(response);
+      setContextCurrentPlayer(hostPlayer);
+      setPlayers(response.players);
       
     } catch (err) {
       setError(err.message);
@@ -47,6 +55,11 @@ function App() {
       const player = response.players.find(p => p.name === joinData.player_name);
       setCurrentPlayer(player);
       
+      // Передаем данные в контекст
+      setContextGameData(response);
+      setContextCurrentPlayer(player);
+      setPlayers(response.players);
+      
     } catch (err) {
       setError(err.message);
       throw err;
@@ -59,29 +72,40 @@ function App() {
     setGameData(null);
     setCurrentPlayer(null);
     setError('');
+    
+    // Очищаем контекст
+    setContextGameData(null);
+    setContextCurrentPlayer(null);
+    setPlayers([]);
   };
 
   return (
+    <div className="App">
+      {!gameData ? (
+        <WelcomeScreen 
+          onCreateGame={handleCreateGame}
+          onJoinGame={handleJoinGame}
+        />
+      ) : (
+        <GameLobby 
+          gameData={gameData}
+          onLeaveGame={handleLeaveGame}
+        />
+      )}
+      
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  return (
     <GameProvider>
-      <div className="App">
-        {!gameData ? (
-          <WelcomeScreen 
-            onCreateGame={handleCreateGame}
-            onJoinGame={handleJoinGame}
-          />
-        ) : (
-          <GameLobby 
-            gameData={gameData}
-            onLeaveGame={handleLeaveGame}
-          />
-        )}
-        
-        {error && (
-          <div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-            {error}
-          </div>
-        )}
-      </div>
+      <AppContent />
     </GameProvider>
   );
 }
