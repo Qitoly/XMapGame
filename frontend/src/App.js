@@ -61,7 +61,7 @@ function AppContent() {
       setPlayers(response.players);
       
     } catch (err) {
-      setError(err.message);
+      setError(err.message || err.toString() || 'Ошибка присоединения к игре');
       throw err;
     } finally {
       setLoading(false);
