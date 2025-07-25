@@ -621,6 +621,234 @@ class EmpireGameTester:
             return False
     
     # =============================================================================
+    # SHORT GAME ID AND DISCONNECT TESTS (NEW)
+    # =============================================================================
+    
+    async def test_short_game_id_generation(self):
+        """Test that game IDs are 6-character alphanumeric (uppercase letters and numbers)"""
+        print("\n🆔 Testing Short Game ID Generation...")
+        
+        # Create multiple games to test ID format and uniqueness
+        game_ids = []
+        
+        for i in range(5):
+            game_result = await self.test_create_game(f"Тест ID {i+1}", f"Хост {i+1}")
+            if not game_result:
+                await self.log_test("Short Game ID Generation", False, f"Failed to create game {i+1}")
+                return False
+            
+            game_id = game_result["game"]["id"]
+            game_ids.append(game_id)
+            
+            # Test ID format: exactly 6 characters, uppercase letters and digits only
+            if len(game_id) != 6:
+                await self.log_test("Short Game ID Generation", False, 
+                                  f"Game ID '{game_id}' is {len(game_id)} characters, expected 6")
+                return False
+            
+            # Check if all characters are uppercase letters or digits
+            import re
+            if not re.match(r'^[A-Z0-9]{6}$', game_id):
+                await self.log_test("Short Game ID Generation", False, 
+                                  f"Game ID '{game_id}' contains invalid characters (should be A-Z, 0-9 only)")
+                return False
+        
+        # Test uniqueness
+        if len(set(game_ids)) != len(game_ids):
+            await self.log_test("Short Game ID Generation", False, 
+                              f"Duplicate IDs found: {game_ids}")
+            return False
+        
+        await self.log_test("Short Game ID Generation", True, 
+                          f"All {len(game_ids)} game IDs are valid 6-character format and unique: {game_ids}")
+        return True
+    
+    async def test_join_with_short_ids(self):
+        """Test joining games using short 6-character IDs"""
+        print("\n🔗 Testing Join Game with Short IDs...")
+        
+        # Create a game with short ID
+        game_result = await self.test_create_game("Короткий ID Тест", "Главный Хост")
+        if not game_result:
+            return False
+        
+        game_id = game_result["game"]["id"]
+        
+        # Verify it's a short ID
+        if len(game_id) != 6:
+            await self.log_test("Join with Short IDs", False, f"Expected 6-char ID, got {len(game_id)}")
+            return False
+        
+        # Test joining with the short ID
+        join_result = await self.test_join_game(game_id, "Тестовый Игрок")
+        if not join_result:
+            await self.log_test("Join with Short IDs", False, "Failed to join game with short ID")
+            return False
+        
+        # Test game details retrieval with short ID
+        details_result = await self.test_get_game_details(game_id, join_result["current_player_id"])
+        if not details_result:
+            await self.log_test("Join with Short IDs", False, "Failed to get game details with short ID")
+            return False
+        
+        await self.log_test("Join with Short IDs", True, 
+                          f"Successfully joined and retrieved details for game with short ID: {game_id}")
+        return True
+    
+    async def test_disconnect_notifications(self):
+        """Test Socket.IO disconnect event notifications"""
+        print("\n🔌 Testing Player Disconnect Notifications...")
+        
+        # Create a game
+        game_result = await self.test_create_game("Тест Отключений", "Хост Сервер")
+        if not game_result:
+            return False
+        
+        game_id = game_result["game"]["id"]
+        host_player_id = game_result["current_player_id"]
+        
+        # Add a second player
+        player2_result = await self.test_join_game(game_id, "Игрок Два")
+        if not player2_result:
+            return False
+        
+        player2_id = player2_result["current_player_id"]
+        
+        # Create Socket.IO clients
+        host_client = await self.test_socket_connection()
+        player2_client = await self.test_socket_connection()
+        
+        if not host_client or not player2_client:
+            await self.log_test("Disconnect Notifications", False, "Failed to create socket connections")
+            return False
+        
+        # Track disconnect events
+        disconnect_events = []
+        
+        @host_client.event
+        async def player_disconnected(data):
+            disconnect_events.append(("host_received", data))
+        
+        @player2_client.event
+        async def player_disconnected(data):
+            disconnect_events.append(("player2_received", data))
+        
+        # Join game rooms
+        await self.test_join_game_room(host_client, game_id, host_player_id)
+        await self.test_join_game_room(player2_client, game_id, player2_id)
+        
+        # Wait a moment for room joining to complete
+        await asyncio.sleep(2)
+        
+        # Disconnect player2 (simulate disconnect)
+        await player2_client.disconnect()
+        
+        # Wait for disconnect event to be processed
+        await asyncio.sleep(3)
+        
+        # Check if host received disconnect notification
+        host_events = [e for e in disconnect_events if e[0] == "host_received"]
+        
+        if host_events:
+            disconnect_data = host_events[0][1]
+            
+            # Validate disconnect event structure
+            if "player_id" in disconnect_data and "player_name" in disconnect_data:
+                expected_name = "Игрок Два"
+                if disconnect_data["player_name"] == expected_name:
+                    await self.log_test("Disconnect Notifications", True, 
+                                      f"Host correctly received disconnect notification for '{expected_name}' (ID: {disconnect_data['player_id']})")
+                    return True
+                else:
+                    await self.log_test("Disconnect Notifications", False, 
+                                      f"Wrong player name in disconnect event: got '{disconnect_data['player_name']}', expected '{expected_name}'")
+                    return False
+            else:
+                await self.log_test("Disconnect Notifications", False, 
+                                  f"Disconnect event missing required fields: {disconnect_data}")
+                return False
+        else:
+            await self.log_test("Disconnect Notifications", False, 
+                              "Host did not receive disconnect notification")
+            return False
+    
+    async def test_disconnect_event_room_isolation(self):
+        """Test that disconnect events are sent to correct game rooms only"""
+        print("\n🏠 Testing Disconnect Event Room Isolation...")
+        
+        # Create two separate games
+        game1_result = await self.test_create_game("Игра Один", "Хост Один")
+        game2_result = await self.test_create_game("Игра Два", "Хост Два")
+        
+        if not game1_result or not game2_result:
+            return False
+        
+        game1_id = game1_result["game"]["id"]
+        game2_id = game2_result["game"]["id"]
+        
+        # Add players to both games
+        game1_player = await self.test_join_game(game1_id, "Игрок Игры 1")
+        game2_player = await self.test_join_game(game2_id, "Игрок Игры 2")
+        
+        if not game1_player or not game2_player:
+            return False
+        
+        # Create socket clients
+        game1_host_client = await self.test_socket_connection()
+        game1_player_client = await self.test_socket_connection()
+        game2_host_client = await self.test_socket_connection()
+        
+        if not all([game1_host_client, game1_player_client, game2_host_client]):
+            await self.log_test("Disconnect Room Isolation", False, "Failed to create socket connections")
+            return False
+        
+        # Track disconnect events for each client
+        game1_host_events = []
+        game2_host_events = []
+        
+        @game1_host_client.event
+        async def player_disconnected(data):
+            game1_host_events.append(data)
+        
+        @game2_host_client.event
+        async def player_disconnected(data):
+            game2_host_events.append(data)
+        
+        # Join respective game rooms
+        await self.test_join_game_room(game1_host_client, game1_id, game1_result["current_player_id"])
+        await self.test_join_game_room(game1_player_client, game1_id, game1_player["current_player_id"])
+        await self.test_join_game_room(game2_host_client, game2_id, game2_result["current_player_id"])
+        
+        # Wait for room joining
+        await asyncio.sleep(2)
+        
+        # Disconnect player from game 1
+        await game1_player_client.disconnect()
+        
+        # Wait for disconnect processing
+        await asyncio.sleep(3)
+        
+        # Check that only game1 host received the disconnect event
+        if game1_host_events and not game2_host_events:
+            disconnect_data = game1_host_events[0]
+            if disconnect_data.get("player_name") == "Игрок Игры 1":
+                await self.log_test("Disconnect Room Isolation", True, 
+                                  "Disconnect event correctly isolated to game room")
+                return True
+            else:
+                await self.log_test("Disconnect Room Isolation", False, 
+                                  f"Wrong player in disconnect event: {disconnect_data}")
+                return False
+        elif game2_host_events:
+            await self.log_test("Disconnect Room Isolation", False, 
+                              "Disconnect event incorrectly sent to wrong game room")
+            return False
+        else:
+            await self.log_test("Disconnect Room Isolation", False, 
+                              "No disconnect events received")
+            return False
+
+    # =============================================================================
     # MAIN TEST RUNNER
     # =============================================================================
     
