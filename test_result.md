@@ -156,7 +156,7 @@ backend:
     file: "server.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -170,6 +170,12 @@ backend:
       - working: true
         agent: "testing"
         comment: "COMPREHENSIVE TESTING COMPLETED: Socket.IO functionality working perfectly with 100% success rate (12/12 tests passed). All critical features tested and working: 1) Connection & handshake at /api/socket.io endpoint, 2) Room management (join_game_room event), 3) Real-time chat (public & private messages), 4) Ping updates (update_ping event), 5) Player ready status synchronization (player_ready event), 6) Game start sequence with country assignment (start_game event), 7) Disconnect handling. All events broadcasting correctly, room isolation working, and real-time communication fully functional."
+      - working: false
+        agent: "user"
+        comment: "Пользователь сообщил о проблеме: когда кто-то входит в комнату - для тех кто там уже был не обновляется, что кто-то вошел"
+      - working: true
+        agent: "main"
+        comment: "FIXED: Добавлено реал-тайм уведомление о новых игроках. В API эндпоинт join_game добавлена отправка события player_joined через Socket.IO. На frontend добавлен обработчик ADD_PLAYER для корректного обновления списка игроков при присоединении новых участников."
 
   - task: "Country Assignment System"
     implemented: true
