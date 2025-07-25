@@ -100,7 +100,32 @@ export function GameProvider({ children }) {
     // Обработчики игровых событий
     socket.on('player_joined', (data) => {
       console.log('Player joined:', data);
-      // Здесь можно обновить список игроков
+      // Добавляем нового игрока в список
+      const newPlayer = {
+        id: data.player_id,
+        name: data.player_name,
+        status: data.status,
+        is_host: data.is_host || false,
+        is_ready: data.is_ready || false,
+        attack_troops: data.attack_troops || 0,
+        defense_troops: data.defense_troops || 0,
+        ping: data.ping || null,
+        country: data.country || null,
+        country_flag: data.country_flag || null
+      };
+      
+      // Проверяем, не существует ли уже этот игрок
+      dispatch((dispatch, getState) => {
+        const currentPlayers = getState ? getState().players : state.players;
+        const existingPlayer = currentPlayers.find(p => p.id === newPlayer.id);
+        
+        if (!existingPlayer) {
+          dispatch({
+            type: GAME_ACTIONS.SET_PLAYERS,
+            payload: [...currentPlayers, newPlayer]
+          });
+        }
+      });
     });
 
     socket.on('player_disconnected', (data) => {
