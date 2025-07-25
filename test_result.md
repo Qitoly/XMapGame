@@ -202,7 +202,7 @@ frontend:
     file: "contexts/GameContext.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -210,6 +210,12 @@ frontend:
       - working: true
         agent: "testing"
         comment: "COMPREHENSIVE TESTING COMPLETED: Game Context Provider working perfectly. Socket.IO connection established successfully, real-time events handled properly, and all context actions functional. Context provides proper state management for the entire application."
+      - working: false
+        agent: "user"
+        comment: "Пользователь сообщил о проблеме: не обновляется список игроков когда кто-то новый присоединяется к игре"
+      - working: true
+        agent: "main"
+        comment: "FIXED: Добавлено новое действие ADD_PLAYER в reducer и обработчик события player_joined для корректного добавления новых игроков в реальном времени. Теперь список игроков обновляется автоматически при присоединении новых участников."
 
   - task: "API Service Layer"
     implemented: true
