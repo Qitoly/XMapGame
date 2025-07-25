@@ -863,6 +863,15 @@ class EmpireGameTester:
             await self.test_get_games_empty()
             await self.test_create_game_validation()
             
+            # NEW: Short Game ID and Disconnect Tests
+            print("\n🆔 Testing Short Game ID System...")
+            await self.test_short_game_id_generation()
+            await self.test_join_with_short_ids()
+            
+            print("\n🔌 Testing Disconnect Event System...")
+            await self.test_disconnect_notifications()
+            await self.test_disconnect_event_room_isolation()
+            
             # Core Functionality Tests
             print("\n🎯 Testing Core Functionality...")
             await self.test_full_lobby_flow()
