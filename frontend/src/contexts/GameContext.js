@@ -80,6 +80,12 @@ const GameContext = createContext();
 // Провайдер контекста
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+  const stateRef = useRef(state);
+
+  // Обновляем ref при изменении состояния
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   // Инициализация Socket.IO соединения
   useEffect(() => {
