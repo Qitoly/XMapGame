@@ -354,7 +354,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Real-time Player Joining Fix Testing Completed Successfully"
+    - "Player Disconnect Real-time Notifications Testing Completed Successfully"
+    - "Kick Player Functionality Testing Completed Successfully"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
