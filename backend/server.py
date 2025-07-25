@@ -228,6 +228,20 @@ async def join_game(game_id: str, request: JoinGameRequest):
             current_player_id=player.id
         )
         
+        # Уведомляем всех игроков в комнате о новом участнике
+        await sio.emit("player_joined", {
+            "player_id": player.id,
+            "player_name": player.name,
+            "status": PlayerStatus.ACTIVE,
+            "is_host": False,
+            "is_ready": False,
+            "attack_troops": 0,
+            "defense_troops": 0,
+            "ping": None,
+            "country": None,
+            "country_flag": None
+        }, room=f"game_{game_id}")
+        
         logger.info(f"Player {player.name} joined game {game_id}")
         return response
         
