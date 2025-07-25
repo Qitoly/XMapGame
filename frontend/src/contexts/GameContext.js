@@ -122,17 +122,7 @@ export function GameProvider({ children }) {
         country_flag: data.country_flag || null
       };
       
-      // Добавляем игрока только если его еще нет в списке
-      dispatch({
-        type: GAME_ACTIONS.SET_PLAYERS,
-        payload: (currentPlayers) => {
-          const existingPlayer = currentPlayers.find(p => p.id === newPlayer.id);
-          if (!existingPlayer) {
-            return [...currentPlayers, newPlayer];
-          }
-          return currentPlayers;
-        }
-      });
+      dispatch({ type: GAME_ACTIONS.ADD_PLAYER, payload: newPlayer });
     });
 
     socket.on('player_disconnected', (data) => {
