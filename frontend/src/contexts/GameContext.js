@@ -132,6 +132,13 @@ export function GameProvider({ children }) {
       console.log('Dispatched REMOVE_PLAYER action for player_id:', data.player_id);
     });
 
+    socket.on('player_kicked', (data) => {
+      console.log('Player kicked event received:', data);
+      console.log('Current players before removal:', state.players);
+      dispatch({ type: GAME_ACTIONS.REMOVE_PLAYER, payload: data.player_id });
+      console.log('Dispatched REMOVE_PLAYER action for kicked player_id:', data.player_id);
+    });
+
     socket.on('new_message', (message) => {
       dispatch({ type: GAME_ACTIONS.ADD_MESSAGE, payload: message });
     });
