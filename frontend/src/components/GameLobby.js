@@ -250,7 +250,12 @@ function GameLobby({ gameData, onLeaveGame }) {
 
                       {/* Кнопка исключения для хоста */}
                       {isHost && !player.is_host && player.id !== currentPlayer?.id && (
-                        <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => handleKickPlayer(player.id)}
+                        >
                           <UserMinus className="w-3 h-3" />
                         </Button>
                       )}
