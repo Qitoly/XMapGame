@@ -356,6 +356,17 @@ async def kick_player(game_id: str, request: KickPlayerRequest, host_player_id: 
             {"$set": {"status": PlayerStatus.DISCONNECTED}}
         )
         
+        # Отключаем от менеджера соединений если есть socket_id
+        if player.get("socket_id"):
+            await connection_manager.disconnect_player(player["id"], player["game_id"])
+        
+        # Уведомляем всех игроков в комнате о кике
+        await sio.emit("player_kicked", {
+            "player_id": player["id"],
+            "player_name": player["name"],
+            "kicked_by": host["name"]
+        }, room=f"game_{game_id}")
+        
         logger.info(f"Player {player['name']} was kicked from game {game_id}")
         return {"message": "Игрок исключен"}
         
