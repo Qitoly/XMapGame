@@ -198,6 +198,36 @@ backend:
         agent: "testing"
         comment: "Country assignment system tested and working perfectly. When game starts via start_game Socket.IO event, countries are randomly assigned to all players with proper flags. Tested with 4 players - all received unique countries (Russia 🇷🇺, USA 🇺🇸, China 🇨🇳, Germany 🇩🇪). Random shuffling working correctly, and country data properly broadcast to all clients."
 
+  - task: "Short Game ID Generation"
+    implemented: true
+    working: true
+    file: "models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented 6-character game ID generation using uppercase letters and numbers (A-Z, 0-9). Modified Game model to use generate_short_id() function instead of UUID. Includes collision detection with retry mechanism."
+      - working: true
+        agent: "testing"
+        comment: "COMPREHENSIVE TESTING COMPLETED: Short Game ID generation working perfectly with 100% success rate. All generated IDs are exactly 6 characters using only uppercase letters and numbers. Tested 10 games - all IDs unique and properly formatted (examples: 78UPD4, J8HA6L, 1HM833, UH98XZ, EFRV7B). Join game functionality works perfectly with short IDs. API endpoints (create, join, get details) all compatible with new ID format."
+
+  - task: "Player Disconnect Event Notifications"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Enhanced Socket.IO disconnect event handler with proper logging and player_disconnected event emission. When players disconnect, other players in the same game room receive notifications with player_id and player_name. Fixed handler signature issue and added Redis dependency."
+      - working: true
+        agent: "testing"
+        comment: "COMPREHENSIVE TESTING COMPLETED: Player disconnect event notifications working perfectly. When a player disconnects from a game lobby, other players in the same room correctly receive 'player_disconnected' events containing proper player_id and player_name. Event isolation working correctly - only players in the same game room receive notifications. Redis service was required and is now running properly. Disconnect handling is production-ready."
+
 frontend:
   - task: "Game Context Provider"
     implemented: true
