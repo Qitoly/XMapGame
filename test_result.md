@@ -244,7 +244,7 @@ frontend:
     file: "components/GameLobby.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -252,6 +252,12 @@ frontend:
       - working: true
         agent: "testing"
         comment: "COMPREHENSIVE TESTING COMPLETED: Game Lobby working excellently. All features tested and functional: 1) Player list displays correctly with ping status, ready indicators, and player info, 2) Real-time chat working perfectly - messages send and display properly, 3) Game info panel shows game ID, player count, language, and settings, 4) Ready button functionality working (toggles between 'Готов к игре' and 'Отменить готовность'), 5) Host controls visible and functional, 6) Socket.IO integration working for real-time updates, 7) UI responsive and well-designed."
+      - working: false
+        agent: "user"
+        comment: "Пользователь сообщил о проблеме с ID игры: отображается короткий ID, но копируется длинный, что создает путаницу"
+      - working: true
+        agent: "main"
+        comment: "FIXED: Исправлена проблема с отображением Game ID. Убрано сокращение ID - теперь отображается полный ID последовательно с тем, что копируется. Добавлена подсказка к кнопке копирования."
 
   - task: "UI Components Library"
     implemented: true
