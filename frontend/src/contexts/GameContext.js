@@ -114,16 +114,15 @@ export function GameProvider({ children }) {
         country_flag: data.country_flag || null
       };
       
-      // Проверяем, не существует ли уже этот игрок
-      dispatch((dispatch, getState) => {
-        const currentPlayers = getState ? getState().players : state.players;
-        const existingPlayer = currentPlayers.find(p => p.id === newPlayer.id);
-        
-        if (!existingPlayer) {
-          dispatch({
-            type: GAME_ACTIONS.SET_PLAYERS,
-            payload: [...currentPlayers, newPlayer]
-          });
+      // Добавляем игрока только если его еще нет в списке
+      dispatch({
+        type: GAME_ACTIONS.SET_PLAYERS,
+        payload: (currentPlayers) => {
+          const existingPlayer = currentPlayers.find(p => p.id === newPlayer.id);
+          if (!existingPlayer) {
+            return [...currentPlayers, newPlayer];
+          }
+          return currentPlayers;
         }
       });
     });
