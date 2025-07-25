@@ -375,7 +375,7 @@ async def connect(sid, environ):
     logger.info(f"Client {sid} connected")
 
 @sio.event
-async def disconnect(sid):
+async def disconnect(sid, environ=None):
     """Обработка отключения клиента"""
     logger.info(f"Client {sid} disconnected")
     
