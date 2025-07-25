@@ -40,6 +40,13 @@ function gameReducer(state, action) {
       return { ...state, gameData: action.payload };
     case GAME_ACTIONS.SET_PLAYERS:
       return { ...state, players: action.payload };
+    case GAME_ACTIONS.ADD_PLAYER:
+      // Добавляем игрока только если его еще нет в списке
+      const existingPlayer = state.players.find(p => p.id === action.payload.id);
+      if (existingPlayer) {
+        return state;
+      }
+      return { ...state, players: [...state.players, action.payload] };
     case GAME_ACTIONS.SET_MESSAGES:
       return { ...state, messages: action.payload };
     case GAME_ACTIONS.ADD_MESSAGE:
