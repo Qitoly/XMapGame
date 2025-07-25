@@ -13,7 +13,7 @@ async def test_socket_polling():
         # First test if the Socket.IO endpoint responds
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                "https://41658789-5cf2-4ad8-a046-fe05d9b0c865.preview.emergentagent.com/api/socket.io/?EIO=4&transport=polling"
+                "https://a1fe7f13-64d9-4d63-9dd7-362cdd87c0c5.preview.emergentagent.com/api/socket.io/?EIO=4&transport=polling"
             ) as response:
                 print(f"Socket.IO polling endpoint status: {response.status}")
                 if response.status == 200:
@@ -37,7 +37,7 @@ async def test_socket_polling():
         async def connect_error(data):
             print(f"❌ Socket.IO connection error: {data}")
         
-        url = "https://41658789-5cf2-4ad8-a046-fe05d9b0c865.preview.emergentagent.com"
+        url = "https://a1fe7f13-64d9-4d63-9dd7-362cdd87c0c5.preview.emergentagent.com"
         print(f"Attempting to connect to: {url}")
         
         await client.connect(
