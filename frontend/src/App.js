@@ -45,6 +45,7 @@ function AppContent() {
       setError('');
       
       const response = await gameAPI.joinGame(joinData.game_id, {
+        game_id: joinData.game_id,
         player_name: joinData.player_name,
         password: joinData.password
       });
