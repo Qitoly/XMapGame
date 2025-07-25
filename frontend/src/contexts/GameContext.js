@@ -178,10 +178,10 @@ export function GameProvider({ children }) {
     socket.on('game_started', (data) => {
       console.log('Game started:', data);
       // Обновляем состояние игры
-      if (state.gameData) {
+      if (stateRef.current.gameData) {
         dispatch({ 
           type: GAME_ACTIONS.SET_GAME_DATA, 
-          payload: { ...state.gameData, current_phase: data.phase, is_started: true }
+          payload: { ...stateRef.current.gameData, current_phase: data.phase, is_started: true }
         });
       }
       // Обновляем игроков с назначенными странами
