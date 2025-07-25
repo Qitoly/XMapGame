@@ -38,7 +38,7 @@ class PlayerStatus(str, Enum):
 
 # Модель игры/комнаты
 class Game(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: str = Field(default_factory=lambda: generate_short_id(6))
     name: str
     host_id: str
     password: Optional[str] = None
