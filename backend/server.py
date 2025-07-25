@@ -92,14 +92,24 @@ async def get_games():
 async def create_game(request: CreateGameRequest):
     """Создать новую игру"""
     try:
-        # Создаем игру
-        game = Game(
-            name=request.name,
-            host_id="",  # Будет обновлен после создания игрока
-            password=request.password,
-            language=request.language,
-            max_players=request.max_players
-        )
+        # Создаем игру с уникальным ID
+        max_attempts = 10
+        for attempt in range(max_attempts):
+            game = Game(
+                name=request.name,
+                host_id="",  # Будет обновлен после создания игрока
+                password=request.password,
+                language=request.language,
+                max_players=request.max_players
+            )
+            
+            # Проверяем уникальность ID
+            existing_game = await db.games.find_one({"id": game.id})
+            if not existing_game:
+                break
+                
+            if attempt == max_attempts - 1:
+                raise Exception("Не удалось создать уникальный ID игры")
         
         # Создаем игрока-хоста
         host = Player(
