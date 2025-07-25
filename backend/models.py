@@ -3,6 +3,14 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
 import uuid
+import random
+import string
+
+# Функция для генерации короткого ID
+def generate_short_id(length: int = 6) -> str:
+    """Генерирует короткий ID из букв и цифр"""
+    characters = string.ascii_uppercase + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
 
 # Enum для фаз игры
 class GamePhase(str, Enum):
