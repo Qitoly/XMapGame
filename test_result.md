@@ -208,7 +208,7 @@ frontend:
     file: "services/gameAPI.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -216,6 +216,12 @@ frontend:
       - working: true
         agent: "testing"
         comment: "CRITICAL BUG FIXED: Found and resolved the '[object Object]' error reported by user. Issue was in error handling - backend returns error.response.data.detail as an array, but frontend was trying to display it directly. Fixed by properly parsing array errors and extracting meaningful error messages. API service now working perfectly with proper error handling."
+      - working: false
+        agent: "user"
+        comment: "Пользователь сообщил о проблеме: При попытке подключиться к игре пишет 'Field required', хотя всё заполнено"
+      - working: true
+        agent: "main"
+        comment: "FIXED: Проблема 'Field required' решена. Добавлено отсутствующее поле game_id в тело запроса JoinGameRequest. Теперь frontend корректно отправляет game_id вместе с player_name и password."
 
   - task: "Welcome Screen Component"
     implemented: true
