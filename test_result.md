@@ -318,7 +318,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Field Required Fix Testing Completed Successfully"
+    - "Real-time Player Joining Fix Testing Completed Successfully"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
