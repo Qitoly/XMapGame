@@ -130,9 +130,9 @@ function GameLobby({ gameData, onLeaveGame }) {
                 <span>ID игры:</span>
                 <div className="flex items-center space-x-1">
                   <code className="bg-gray-100 px-2 py-1 rounded text-xs">
-                    {gameData?.game?.id?.slice(-8)}
+                    {gameData?.game?.id}
                   </code>
-                  <Button size="sm" variant="ghost" onClick={copyGameId}>
+                  <Button size="sm" variant="ghost" onClick={copyGameId} title="Копировать ID">
                     <Copy className="w-3 h-3" />
                   </Button>
                 </div>
