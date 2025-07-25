@@ -126,8 +126,10 @@ export function GameProvider({ children }) {
     });
 
     socket.on('player_disconnected', (data) => {
-      console.log('Player disconnected:', data);
+      console.log('Player disconnected event received:', data);
+      console.log('Current players before removal:', state.players);
       dispatch({ type: GAME_ACTIONS.REMOVE_PLAYER, payload: data.player_id });
+      console.log('Dispatched REMOVE_PLAYER action for player_id:', data.player_id);
     });
 
     socket.on('new_message', (message) => {
