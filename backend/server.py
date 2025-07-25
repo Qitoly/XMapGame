@@ -382,6 +382,8 @@ async def disconnect(sid):
     # Ищем игрока по socket_id и помечаем как отключенного
     player = await db.players.find_one({"socket_id": sid})
     if player:
+        logger.info(f"Found player {player['name']} (ID: {player['id']}) for disconnect")
+        
         await db.players.update_one(
             {"id": player["id"]},
             {"$set": {"status": PlayerStatus.DISCONNECTED, "socket_id": None}}
@@ -391,10 +393,16 @@ async def disconnect(sid):
         await connection_manager.disconnect_player(player["id"], player["game_id"])
         
         # Уведомляем других игроков в комнате
-        await sio.emit("player_disconnected", {
+        disconnect_data = {
             "player_id": player["id"],
             "player_name": player["name"]
-        }, room=f"game_{player['game_id']}")
+        }
+        logger.info(f"Emitting player_disconnected event to room game_{player['game_id']}: {disconnect_data}")
+        
+        await sio.emit("player_disconnected", disconnect_data, room=f"game_{player['game_id']}")
+        logger.info(f"Successfully emitted player_disconnected event for {player['name']}")
+    else:
+        logger.warning(f"No player found for socket_id {sid} during disconnect")
 
 @sio.event
 async def join_game_room(sid, data):
