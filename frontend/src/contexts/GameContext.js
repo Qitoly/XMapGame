@@ -163,10 +163,10 @@ export function GameProvider({ children }) {
       });
       
       // Также обновляем текущего игрока если это он
-      if (state.currentPlayer && state.currentPlayer.id === data.player_id) {
+      if (stateRef.current.currentPlayer && stateRef.current.currentPlayer.id === data.player_id) {
         dispatch({ 
           type: GAME_ACTIONS.SET_CURRENT_PLAYER, 
-          payload: { ...state.currentPlayer, is_ready: data.is_ready }
+          payload: { ...stateRef.current.currentPlayer, is_ready: data.is_ready }
         });
       }
     });
