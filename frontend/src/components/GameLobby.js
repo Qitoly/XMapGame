@@ -20,7 +20,7 @@ import {
   Sword
 } from 'lucide-react';
 import { useGame } from '../contexts/GameContext';
-import { gameUtils } from '../services/gameAPI';
+import { gameUtils, gameAPI } from '../services/gameAPI';
 
 function GameLobby({ gameData, onLeaveGame }) {
   const { 
