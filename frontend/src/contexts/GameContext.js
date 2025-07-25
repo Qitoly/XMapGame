@@ -199,15 +199,15 @@ export function GameProvider({ children }) {
   const gameActions = {
     // Присоединиться к комнате игры
     joinGameRoom: (gameId, playerId) => {
-      if (state.socket) {
-        state.socket.emit('join_game_room', { game_id: gameId, player_id: playerId });
+      if (stateRef.current.socket) {
+        stateRef.current.socket.emit('join_game_room', { game_id: gameId, player_id: playerId });
       }
     },
 
     // Отправить сообщение
     sendMessage: (gameId, playerId, message, targetPlayerId = null) => {
-      if (state.socket) {
-        state.socket.emit('send_message', {
+      if (stateRef.current.socket) {
+        stateRef.current.socket.emit('send_message', {
           game_id: gameId,
           player_id: playerId,
           message,
@@ -218,22 +218,22 @@ export function GameProvider({ children }) {
 
     // Обновить пинг
     updatePing: (playerId, ping) => {
-      if (state.socket) {
-        state.socket.emit('update_ping', { player_id: playerId, ping });
+      if (stateRef.current.socket) {
+        stateRef.current.socket.emit('update_ping', { player_id: playerId, ping });
       }
     },
 
     // Изменить статус готовности
     setPlayerReady: (playerId, isReady) => {
-      if (state.socket) {
-        state.socket.emit('player_ready', { player_id: playerId, is_ready: isReady });
+      if (stateRef.current.socket) {
+        stateRef.current.socket.emit('player_ready', { player_id: playerId, is_ready: isReady });
       }
     },
 
     // Начать игру (только хост)
     startGame: (gameId, playerId) => {
-      if (state.socket) {
-        state.socket.emit('start_game', { game_id: gameId, player_id: playerId });
+      if (stateRef.current.socket) {
+        stateRef.current.socket.emit('start_game', { game_id: gameId, player_id: playerId });
       }
     },
 
