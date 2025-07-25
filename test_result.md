@@ -156,7 +156,7 @@ backend:
     file: "server.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -176,6 +176,9 @@ backend:
       - working: true
         agent: "main"
         comment: "FIXED: Добавлено реал-тайм уведомление о новых игроках. В API эндпоинт join_game добавлена отправка события player_joined через Socket.IO. На frontend добавлен обработчик ADD_PLAYER для корректного обновления списка игроков при присоединении новых участников."
+      - working: true
+        agent: "testing"
+        comment: "REAL-TIME PLAYER JOINING TESTING COMPLETED SUCCESSFULLY: 100% success rate (8/8 tests passed). The fix for real-time player joining is working perfectly! ✅ When players join via API, existing players receive player_joined events with correct structure (player_id, player_name, status, is_host, is_ready, etc.), ✅ Events are properly sent to the correct Socket.IO room (game_{game_id}), ✅ Multiple existing players all receive the event when a new player joins, ✅ Socket.IO room isolation working correctly. The user-reported issue is completely resolved - existing players now see real-time updates when new players join the game. Redis service was required and is now running properly."
 
   - task: "Country Assignment System"
     implemented: true
