@@ -99,6 +99,18 @@ function GameLobby({ gameData, onLeaveGame }) {
     // Можно добавить уведомление о копировании
   };
 
+  const handleKickPlayer = async (playerId) => {
+    try {
+      if (gameData?.game?.id && currentPlayer?.id) {
+        await gameAPI.kickPlayer(gameData.game.id, playerId, currentPlayer.id);
+        // Событие player_kicked будет обработано через Socket.IO
+      }
+    } catch (error) {
+      console.error('Ошибка при исключении игрока:', error);
+      // Можно добавить отображение ошибки
+    }
+  };
+
   const isHost = gameData?.is_host || false;
   const canStart = gameUtils.canStartGame(gameData?.game, players, currentPlayer?.id);
   const activePlayersCount = gameUtils.getActivePlayersCount(players);
